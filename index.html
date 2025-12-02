@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exhibition Lead Form</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.png">
+</head>
+<body>
+    <div class="container">
+        <!-- Network Status Indicators -->
+        <div id="online-status" class="status online">
+            ✅ Online - Data will sync to Google Sheets
+        </div>
+        <div id="offline-status" class="status offline">
+            ⚠️ Offline - Data saved locally (Will sync when back online)
+            <div id="pending-count">Pending sync: 0</div>
+        </div>
+        
+        <!-- Sync Status -->
+        <div id="sync-status" class="status syncing" style="display: none;">
+            🔄 Syncing saved data to Google Sheets...
+        </div>
+        
+        <h1>📋 Exhibition Lead Capture</h1>
+        <p class="subtitle">Fill this form to collect lead information</p>
+        
+        <form id="leadForm">
+            <div class="form-section">
+                <h2>Contact Information</h2>
+                
+                <div class="form-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" name="fullName" required 
+                           placeholder="Enter full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="company">Company / Organization</label>
+                    <input type="text" id="company" name="company" 
+                           placeholder="Company name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="jobTitle">Job Title</label>
+                    <input type="text" id="jobTitle" name="jobTitle" 
+                           placeholder="e.g., Manager, Director">
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>Contact Details</h2>
+                
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="email@company.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" 
+                           placeholder="+1 (555) 123-4567">
+                </div>
+                
+                <div class="form-group">
+                    <label for="country">Country</label>
+                    <select id="country" name="country">
+                        <option value="">Select Country</option>
+                        <option value="US">United States</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <!-- Add more countries as needed -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>Interest & Notes</h2>
+                
+                <div class="form-group">
+                    <label for="productInterest">Product Interest</label>
+                    <select id="productInterest" name="productInterest" multiple>
+                        <option value="product-a">Product A</option>
+                        <option value="product-b">Product B</option>
+                        <option value="product-c">Product C</option>
+                        <option value="service">Service</option>
+                        <option value="demo">Request Demo</option>
+                        <option value="pricing">Pricing Info</option>
+                    </select>
+                    <small>Hold Ctrl/Cmd to select multiple</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="leadSource">How did you hear about us?</label>
+                    <select id="leadSource" name="leadSource">
+                        <option value="">Select source</option>
+                        <option value="exhibition-booth">Exhibition Booth</option>
+                        <option value="colleague">Colleague</option>
+                        <option value="online">Online Search</option>
+                        <option value="social-media">Social Media</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" name="notes" rows="3" 
+                              placeholder="Any specific requirements or questions..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="followUp">Follow-up Priority</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="followUp" value="high"> High Priority
+                        </label>
+                        <label>
+                            <input type="radio" name="followUp" value="medium" checked> Medium
+                        </label>
+                        <label>
+                            <input type="radio" name="followUp" value="low"> Low Priority
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="checkbox">
+                        <input type="checkbox" name="consent" required>
+                        I consent to receive communications and agree to the privacy policy
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" id="submitBtn" class="btn-primary">
+                    <span id="submitText">Save Lead</span>
+                    <span id="submitIcon" class="icon">💾</span>
+                </button>
+                
+                <button type="button" id="viewPendingBtn" class="btn-secondary">
+                    View Pending Leads (<span id="pendingBadge">0</span>)
+                </button>
+                
+                <button type="button" id="syncNowBtn" class="btn-secondary" style="display: none;">
+                    Sync Now
+                </button>
+            </div>
+        </form>
+        
+        <!-- Pending Leads Modal -->
+        <div id="pendingModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📥 Pending Leads (Offline)</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>These leads are saved locally and will sync when internet is available:</p>
+                    <div id="pendingLeadsList"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="clearAllBtn" class="btn-danger">Clear All</button>
+                    <button id="retrySyncBtn" class="btn-primary">Retry Sync</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker for offline capability
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(() => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
