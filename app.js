@@ -132,13 +132,13 @@ class ExhibitionLeadForm {
             // Prepare data for Google Sheets
             const sheetData = leadData; // Send data directly, no wrapper
             
-       const response = await fetch(this.GOOGLE_SHEET_URL, {
+  const response = await fetch(this.GOOGLE_SHEET_URL, {
   method: 'POST',
   mode: 'no-cors',
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'text/plain',
   },
-  body: 'data=' + encodeURIComponent(JSON.stringify(sheetData))
+  body: JSON.stringify(leadData)  // CORRECT: 'leadData' is the parameter
 });
             
             if (response.ok) {
@@ -177,76 +177,64 @@ class ExhibitionLeadForm {
         this.animateSubmitButton();
     }
     
-    async trySyncPendingLeads() {
-
-       
-        if (!this.onlineStatus || this.pendingLeads.length === 0) return;
-        
-        this.showSyncStatus();
-        
-        const failedLeads = [];
-        
-        for (const lead of [...this.pendingLeads]) {
-            try {
-                lead.syncAttempts = (lead.syncAttempts || 0) + 1;
-                
-                const sheetData = {
-                    action: 'addLead',
-                    data: lead
-                };
-                
-   // FIXED FETCH CALL - Use mode: 'no-cors'
-const response = await fetch(this.GOOGLE_SHEET_URL, {
-  method: 'POST',
-  mode: 'no-cors',  // THIS IS CRITICAL
-  headers: {
-    'Content-Type': 'text/plain',
-  },
-  body: JSON.stringify(lead)
-});
-                
-                if (response.ok) {
-                    // Remove from pending
-                    this.pendingLeads = this.pendingLeads.filter(l => l.id !== lead.id);
-                    console.log(`Synced lead: ${lead.email}`);
-                } else {
-                    if (lead.syncAttempts < 3) {
-                        failedLeads.push(lead);
-                    } else {
-                        console.warn(`Max sync attempts reached for: ${lead.email}`);
-                        failedLeads.push({...lead, status: 'failed'});
-                    }
-                }
-                
-                // Small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-            } catch (error) {
-                console.error('Sync error for lead:', lead.email, error);
-                if (lead.syncAttempts < 3) {
-                    failedLeads.push(lead);
-                }
-            }
-        }
-        
-        // Update storage with remaining/failed leads
-        this.pendingLeads = failedLeads;
-        localStorage.setItem('pendingLeads', JSON.stringify(this.pendingLeads));
-        
-        this.updatePendingBadge();
-        this.updateStatusDisplay();
-        this.hideSyncStatus();
-        
-        if (failedLeads.length < this.pendingLeads.length) {
-            const syncedCount = this.pendingLeads.length - failedLeads.length;
-            this.showSuccess(`✅ Synced ${syncedCount} lead(s) to Google Sheets!`);
-        }
-        
-        // Refresh modal if open
-        if (document.getElementById('pendingModal').style.display === 'block') {
-            this.showPendingModal();
-        }
+  async trySyncPendingLeads() {
+  if (!this.onlineStatus || this.pendingLeads.length === 0) return;
+  
+  this.showSyncStatus();
+  
+  const failedLeads = [];
+  
+  for (const lead of [...this.pendingLeads]) {  // Note: 'lead' is defined here
+    try {
+      lead.syncAttempts = (lead.syncAttempts || 0) + 1;
+      
+      // FIX: Use proper variable name
+      const response = await fetch(this.GOOGLE_SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',  // Important for localhost
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+        body: JSON.stringify(lead)  // CORRECT: 'lead' is defined in for loop
+      });
+      
+      // With mode: 'no-cors', we can't read response but request is sent
+      // Assume success and remove from pending
+      this.pendingLeads = this.pendingLeads.filter(l => l.id !== lead.id);
+      console.log(`✅ Sent lead: ${lead.email}`);
+      
+      // Small delay between requests
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+    } catch (error) {
+      console.error(`❌ Sync error for: ${lead.email}`, error);
+      if (lead.syncAttempts < 3) {
+        failedLeads.push(lead);
+      } else {
+        console.warn(`Max sync attempts reached for: ${lead.email}`);
+        failedLeads.push({...lead, status: 'failed'});
+      }
     }
+  }
+  
+  // Update storage with remaining/failed leads
+  this.pendingLeads = failedLeads;
+  localStorage.setItem('pendingLeads', JSON.stringify(this.pendingLeads));
+  
+  this.updatePendingBadge();
+  this.updateStatusDisplay();
+  this.hideSyncStatus();
+  
+  if (failedLeads.length < this.pendingLeads.length) {
+    const syncedCount = this.pendingLeads.length - failedLeads.length;
+    this.showSuccess(`✅ Synced ${syncedCount} lead(s)!`);
+  }
+  
+  // Refresh modal if open
+  if (document.getElementById('pendingModal').style.display === 'block') {
+    this.showPendingModal();
+  }
+}
     
     showPendingModal() {
         const modal = document.getElementById('pendingModal');
