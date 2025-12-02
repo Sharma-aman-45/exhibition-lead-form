@@ -179,7 +179,7 @@ class ExhibitionLeadForm {
     
     async trySyncPendingLeads() {
 
-        await jsonpRequest(this.GOOGLE_SHEET_URL.replace('/exec', '') + '/dev', lead);
+       
         if (!this.onlineStatus || this.pendingLeads.length === 0) return;
         
         this.showSyncStatus();
