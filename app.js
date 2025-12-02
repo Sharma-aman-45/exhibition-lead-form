@@ -81,7 +81,7 @@ class ExhibitionLeadForm {
       submitBtn.innerHTML = '<div class="loading"></div> Submitting...';
       submitBtn.disabled = true;
       
-      const response = await fetch(this.API_ENDPOINT, {
+      const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ class ExhibitionLeadForm {
         delete dataToSend.syncAttempts;
         delete dataToSend.status;
         
-        const response = await fetch(this.API_ENDPOINT, {
+        const response = await fetch(this.API_URL , {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
