@@ -71,6 +71,11 @@ class ExhibitionLeadForm {
   onSubmit(e) {
     e.preventDefault();
     console.log('🔘 Form submit button clicked');
+      // Log ALL form values
+    console.log('Name:', document.getElementById('fullName').value);
+    console.log('Email:', document.getElementById('email').value);
+    console.log('Phone:', document.getElementById('phone').value);
+    console.log('Company:', document.getElementById('company').value);
     
     // Get ALL form values
     const lead = {
